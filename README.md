@@ -13,7 +13,7 @@ Dependencies:
 * Zookeeper server running on localhost:2181, and zookeeper client (3.3.3)
 * node-zookeeper (https://github.com/yfinkelstein/node-zookeeper)
 * or, my version (pull request to the main version): https://github.com/jayjanssen/node-zookeeper
-*Node async module: https://github.com/caolan/async
+* Node async module: https://github.com/caolan/async
 
 
 Writing your authentication/authorization method:
