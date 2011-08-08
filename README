@@ -1,0 +1,5 @@
+Quorum v1
+
+Quorum is a REST webservice written in node.js that sits on top of a zookeeper cluster.  The REST interface implements a leasing service, which allows clients to do normal leasing actions like acquire, renew, release, get.  
+
+More information to come on the API documentation and usage patterns.

@@ -1,0 +1,26 @@
+{   
+  "quorum_v1" : {
+    "routes" : [
+      {
+        "method": "get",
+        "route": "/v1/*"
+      },
+      {
+        "method": "head",
+        "route": "/v1/*"
+      },
+      {
+        "method": "post",
+        "route": "/v1/*"
+      },
+      {
+        "method": "put",
+        "route": "/v1/*"
+      },
+      {
+        "method": "delete",
+        "route": "/v1/*"
+      }
+    ]
+  }
+}
