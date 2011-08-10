@@ -51,16 +51,35 @@ module.exports = {
     
         async.waterfall([       
              
-          // Remove the key
+          // Remove the key and its parent
           function( callback ) { // result from create
             qs.get( test_key2, function( data, version) {
               if( version !== undefined ) {
                 qs.remove( test_key2, version, function( result ) { 
                   console.log( "Delete rc: " + result );
-                  callback();
+                  
+                  var parent = '/a/path/to/something';
+                  qs.get( parent, function( data, version) {
+                    qs.remove( '/a/path/to/something', version, function( result ) { 
+                      console.log( "Delete rc: " + result );
+                      assert.ok( result, parent + ' parent removed' );
+                      callback();
+                    });
+                  });
                 });                
               } else {
-                callback();
+                var parent = '/a/path/to/something';
+                qs.get( parent, function( data, version) {
+                  if( version === undefined ) {
+                    callback();
+                  } else {
+                    qs.remove( '/a/path/to/something', version, function( result ) { 
+                      console.log( "Delete rc: " + result );
+                      assert.ok( result, parent + ' parent removed' );
+                      callback();
+                    });                    
+                  }
+                });
               }
             });
           },
@@ -91,10 +110,11 @@ module.exports = {
           },
           // Remove the key
           function( version, callback ) { // result from create
+            console.log( "Remove key" );
             qs.remove( test_key2, version, function( result ) { 
               console.log( "Delete rc: " + result );
               assert.ok( result, test_key2 + ' node removed' );        
-              cb();
+              callback( null );
             });
           }
         ]);
