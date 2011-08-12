@@ -48,7 +48,6 @@ async.forEach( znodes, function( znode, callback ) {
     for( index in results.history ) {
       var old_lease = results.history[index];
       
-      
       var diff = old_lease.expires - old_lease.acquired;
       if( old_lease.released ) {
         diff = old_lease.released - old_lease.acquired;
