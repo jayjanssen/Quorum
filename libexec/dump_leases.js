@@ -8,6 +8,7 @@ require.paths.unshift('../');
 var util = require( 'util' );
 var async = require( 'async' );
 var QuorumLease = require( 'lease' );
+var qs = require( 'storage' );
 var znodes = process.argv.slice( 2 );
 
 var print_date = function( unixtime ) {
