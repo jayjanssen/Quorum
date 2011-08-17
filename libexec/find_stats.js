@@ -73,7 +73,7 @@ qs.get_all_children( '/', function( children ) {
       },
     },
     function( err, results ) {
-      console.log( util.inspect( results ) );
+      console.log( JSON.stringify( results ) );
       qs.close();
     });
     
