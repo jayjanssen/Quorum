@@ -4,63 +4,175 @@
 // governing permissions and limitations under the
 // License.
 
-// this guy should get rewritten
+// Go through all nodes in storage.  Clean out (remove) the following:
+// - nodes without children
+// - leases that haven't been used then over a certain amount of time
+// Exceptions:
+// - nodes in certain paths
+
 require.paths.unshift('../');
 var util = require( 'util' );
 
-var CondVar = require("./condvar");
+var log = require( 'logger' )( 'clean_storage', 'WARN');
+
 var qs = require("storage");
+var async = require("async");
+var QuorumLease = require( "lease" );
 
-var ZK = require ('zookeeper').ZooKeeper;
+var stats = {};  // output stats
 
-var cv = new CondVar( function() {
-  qs.close();
-});
+var exceptions = [
+  /^\/$/,
+  /^\/zookeeper.*$/,
+  /^\/quorum_rotation.*$/,
+  /^\/quorum_node.*$/,
+];
 
-function remove_node_and_children( key, callback ) {
-  console.log( "Checking " + key );
-  qs.get_children( key, function( children) {
-    console.log( "Children of " + key + " are: " + util.inspect( children ));
-    
-    var prepend = key;
-    if( !key.match( /\/$/ ) ) {
-      // does not end with a '/'
-      prepend += '/';
-    }
-    
-    var children_done = new CondVar( function() {
-      // Now get and remove key    
-      qs.get( key, function( data, version ) {
-        // console.log( key + "=> " + util.inspect( stat ) );
-        if( key != '/' ) {          
-          qs.remove( key, version, function( rc, error ) {
-            console.log( "Deleted " + key + '(' + rc + ')');
-            callback();
-          })
-        } else {
-          callback();
-        }
-      });
-    });
-    
-    if( children.length > 0 ) {
-      for( var child in children ) {
-        children_done.begin();
-        remove_node_and_children( prepend + children[child], function() {
-          children_done.end();
-        });
-      }      
-    } else {
-      console.log( key + " has no children" );
-      children_done.send();
-    }
-    
-    
-        
+// how old a lease should be to expire it
+var lease_purge_time = 60 * 60 * 24 * 30; // 30 days
+var date = new Date();
+var now = parseInt( date.getTime() / 1000, 10 );
+var lease_purge_cutoff = now - lease_purge_time;  // leases last touched before this time are purged
+log.info( "Lease purge cutoff: " + lease_purge_cutoff );
+
+// find all the nodes
+var get_all_nodes = function( done ) {
+  qs.get_all_children( '/', function( children ) {
+    stats.total_nodes = children.length;
+    done( null, children );
   });
+};
+
+// sort nodes so they are depth first (longest first should do it)
+var sort_nodes = function( nodes, done ) {
+  done( null, nodes.sort( function( a, b ) {
+    return b.length - a.length;
+  }));
 }
 
-cv.begin();
-remove_node_and_children( '/', function() {
-  cv.end();
+// remove any nodes that are in the exception regex array
+var filter_exceptions = function( nodes, done ) {
+  // Pass one nodes that do not match any exceptions
+  var filtered = nodes.filter( function( node ) {
+    // returns true if node is not in any exceptions
+    return exceptions.every( function( regex ) { 
+      // returns true if exception doesn't match
+      return ! regex.test( node ); 
+    });
+  });
+  stats.filtered_nodes = nodes.length - filtered.length;
+  done( null, filtered );
+}
+
+// remove any nodes that are leases and have been updated within
+// the lease_purge_time
+var filter_used_leases = function( nodes, done ) {
+  // filter nodes list
+  async.reject( nodes, function( node, purge_node ) {
+    var lease = QuorumLease( node );
+    async.parallel({
+      is_valid: function( cb ) { lease.is_valid( function( val ) { cb( null, val ); }); },
+      is_lease: function( cb ) { lease.is_lease( function( val ) { cb( null, val ); }); },
+      expires: function( cb ) { lease.get_expires( function( val ) { cb( null, val ); }); },
+      released: function( cb ) { lease.get_released( function( val ) { cb( null, val ); }); }
+    }, function( err, lease_data ) {     
+      if( lease_data.is_lease ) {
+        log.debug( "Testing lease: " + node );
+        log.debug( "\tis_valid: " + lease_data.is_valid );
+        log.debug( "\treleased: " + lease_data.released );
+        log.debug( "\treleased cutoff: " + ( lease_data.released > lease_purge_cutoff ));        
+        log.debug( "\texpires cutoff: " + ( lease_data.expires > lease_purge_cutoff ));
+      }
+      if( lease_data.is_lease && !lease_data.is_valid && 
+          ((!lease_data.released || lease_data.released > lease_purge_cutoff) ||
+          lease_data.expires > lease_purge_cutoff)
+        ) 
+      {
+        if( lease_data.is_lease ) {
+          log.debug( "\tlease not being purged" );
+        }
+        purge_node( true ); // node should not be purged
+      } else {
+        if( lease_data.is_lease ) {
+          log.debug( "\tlease in purge list" );          
+        }
+        purge_node( false ); // node should be purged
+      }
+    });
+  }, function( results ) {
+    stats.used_nodes = nodes.length - results.length;
+    done( null, results ); // results are all except recent leases
+  });
+};
+
+// filter nodes that have children not in the purge list
+// The incoming list is from deepest to shallowest nodes, 
+// so we rebuild the list as a reduce: depth-first
+var filter_parents = function( nodes, done ) {
+  // var reduce_result = [];
+  async.reduce( nodes, [], function( reduce_result, node, node_done ) {
+    qs.get_children( node, function( children ) {
+      if( children === undefined ) {
+        node_done( "can't get children of " + node );
+      } else {        
+        // Check all the children to see if all are in the reduce_results
+        if( children.every( function( child ) {          
+          // Check the current purge list for the existence of this child
+          return reduce_result.some( function( purging_node ) {
+            return node + '/' + child === purging_node;
+          });
+        })) {          
+          // any children are in the purge list, add this to the reduce_result (purge list)
+          reduce_result.push( node ); 
+        }
+        node_done( null, reduce_result );
+      }
+    });
+  }, function( err, purge_list ) {
+    stats.parent_nodes = nodes.length - purge_list.length;
+    done( null, purge_list );
+  });
+};
+
+// purge nodes
+var purge_leases = function( nodes, purge_done ) {
+  log.info( "Purging nodes: " + util.inspect( nodes ));
+  
+  stats.purged_nodes = 0;
+    
+  async.forEach( nodes, function( node, node_done ) {
+    qs.get( node, function( data, version ) {
+      if( !data ) {
+        // Error deleting node
+        log.error( "Couldn't get node: " + node )
+        node_done( null );
+      } else {   
+        log.info( "Purging node " + node + ", version: " + version );     
+        qs.remove( node, version, function( result ) {
+          stats.purged_nodes += 1;
+          log.info( "\tresults: " + result );
+          node_done( null );
+        });
+      }
+    });
+  }, function( err ) {
+    purge_done( null );
+  });
+};
+
+
+// Main control structure, each function passes its results to the next or errors immediately
+async.waterfall([
+  get_all_nodes,
+  sort_nodes,
+  filter_exceptions,
+  filter_used_leases,
+  filter_parents,
+  purge_leases
+], function( err ) {
+  if( err ) {
+    log.fatal( "Exiting with error..." );      
+  }
+  console.log( JSON.stringify( stats ));
+  qs.close();
 });
