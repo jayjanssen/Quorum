@@ -13,7 +13,7 @@
 require.paths.unshift('../');
 var util = require( 'util' );
 
-var log = require( 'logger' )( 'clean_storage', 'WARN');
+var log = require( 'logger' )( 'clean_storage', 'DEBUG');
 
 var qs = require("storage");
 var async = require("async");
@@ -68,11 +68,11 @@ var filter_exceptions = function( nodes, done ) {
 // the lease_purge_time
 var filter_used_leases = function( nodes, done ) {
   // filter nodes list
-  async.reject( nodes, function( node, purge_node ) {
+  async.reject( nodes, function( node, keep_node ) {
     var lease = QuorumLease( node );
     async.parallel({
-      is_valid: function( cb ) { lease.is_valid( function( val ) { cb( null, val ); }); },
       is_lease: function( cb ) { lease.is_lease( function( val ) { cb( null, val ); }); },
+      is_valid: function( cb ) { lease.is_valid( function( val ) { cb( null, val ); }); },
       expires: function( cb ) { lease.get_expires( function( val ) { cb( null, val ); }); },
       released: function( cb ) { lease.get_released( function( val ) { cb( null, val ); }); }
     }, function( err, lease_data ) {     
@@ -82,22 +82,15 @@ var filter_used_leases = function( nodes, done ) {
         log.debug( "\treleased: " + lease_data.released );
         log.debug( "\treleased cutoff: " + ( lease_data.released > lease_purge_cutoff ));        
         log.debug( "\texpires cutoff: " + ( lease_data.expires > lease_purge_cutoff ));
-      }
-      if( lease_data.is_lease && !lease_data.is_valid && 
-          ((!lease_data.released || lease_data.released > lease_purge_cutoff) ||
-          lease_data.expires > lease_purge_cutoff)
-        ) 
-      {
-        if( lease_data.is_lease ) {
-          log.debug( "\tlease not being purged" );
-        }
-        purge_node( true ); // node should not be purged
+        
+        var keep_lease = ( lease_data.is_valid ||                 // valid or
+            lease_data.expires > lease_purge_cutoff ||            // expired recently
+            (!lease_data.released || lease_data.released > lease_purge_cutoff));  // was released recently
+        log.debug( "\tkeeping lease: " + keep_lease );
+        keep_node( keep_lease );         
       } else {
-        if( lease_data.is_lease ) {
-          log.debug( "\tlease in purge list" );          
-        }
-        purge_node( false ); // node should be purged
-      }
+        keep_node( false );  // we pass through non-leases here
+      }      
     });
   }, function( results ) {
     stats.used_nodes = nodes.length - results.length;
