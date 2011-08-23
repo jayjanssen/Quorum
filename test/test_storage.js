@@ -37,11 +37,15 @@ module.exports = {
           },
           function( version, call2 ) {
             qs.remove( test_key, version, function( result ) {
+              console.log( "Removed " + test_key );
               assert.ok( result, test_key + ' node removed' );
               call2();
             });
           },    
-        ], function() { cb() });
+        ], function() {
+          console.log( "done with " + test_key );
+          cb();
+        });
       },
 
 
@@ -117,11 +121,15 @@ module.exports = {
               callback( null );
             });
           }
-        ]);
+        ], function( err ) {
+          console.log( "Done with " + test_key2 );
+          cb();
+        });
       }
     ],
     // when all those are done
     function( err, results ) {
+      console.log( "Here" );
       qs.close(); 
     });
   }
