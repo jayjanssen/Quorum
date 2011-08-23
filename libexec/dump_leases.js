@@ -19,8 +19,8 @@ var print_date = function( unixtime ) {
 async.forEach( znodes, function( znode, callback ) {
   var lease = QuorumLease( znode );
 
-  lease.getTXT( function( output ) {
-    console.log( output );
+  lease.fetch( function() {
+    console.log( lease.toString() );
     callback( null );
   });
  
