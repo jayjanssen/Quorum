@@ -85,7 +85,7 @@ var filter_used_leases = function( nodes, done ) {
         
         var keep_lease = ( lease_data.is_valid ||                 // valid or
             lease_data.expires > lease_purge_cutoff ||            // expired recently
-            (!lease_data.released || lease_data.released > lease_purge_cutoff));  // was released recently
+            (lease_data.released && lease_data.released > lease_purge_cutoff));  // was released recently
         log.debug( "\tkeeping lease: " + keep_lease );
         keep_node( keep_lease );         
       } else {
