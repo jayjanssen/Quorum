@@ -33,7 +33,7 @@ module.exports = {
             'method': 'GET', 'url': '/v1/namespace/lease/missingkey',
             'headers': {},
             'connection': { 'remoteAddress': '127.0.0.1' },
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 404 }, 
               { 'code': code, 'content': content, 'headers': headers } );
@@ -50,7 +50,7 @@ module.exports = {
             },
             'connection': { 'remoteAddress': '127.0.0.1' },
             'test_data': 'foo',
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 201 }, 
               { 'code': code, 'content': content, 'headers': headers } );
@@ -64,7 +64,7 @@ module.exports = {
             'method': 'GET', 'url': '/v1/namespace/lease/testkey',
             'headers': {},
             'connection': {},
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 200, 'content': 'foo' }, 
               { 'code': code, 'content': content, 'headers': headers } );
@@ -79,7 +79,7 @@ module.exports = {
             'headers': { 'x-quorum-lease-length': 5, 'x-quorum-lease-version': version },
             'connection': { 'remoteAddress': '127.0.0.2' },
             'test_data': 'test',
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 409 }, 
               { 'code': code, 'content': content, 'headers': headers } );
@@ -98,7 +98,7 @@ module.exports = {
             'headers': { 'x-quorum-lease-version': version },
             'connection': { 'remoteAddress': '127.0.0.1' },
             'test_data': 'test',
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 202 }, 
               { 'code': code, 'content': content, 'headers': headers } );
@@ -113,7 +113,7 @@ module.exports = {
             'headers': { 'x-quorum-lease-version': version },
             'connection': { 'remoteAddress': '127.0.0.2' },
             'test_data': 'test',      
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 403 }, 
               { 'code': code, 'content': content, 'headers': headers } );
@@ -128,7 +128,7 @@ module.exports = {
             'headers': { 'x-quorum-lease-version': version },
             'connection': { 'remoteAddress': '127.0.0.1' },
             'test_data': 'test',
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 204 }, 
               { 'code': code, 'content': content, 'headers': headers } );
@@ -142,7 +142,7 @@ module.exports = {
             'method': 'HEAD', 'url': '/v1/namespace/lease/testkey',
             'headers': {},
             'connection': {},
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 404 }, 
               { 'code': code, 'content': content, 'headers': headers } );
@@ -157,7 +157,7 @@ module.exports = {
             'headers': { 'x-quorum-lease-length': 5 },
             'connection': { 'remoteAddress': '127.0.0.2' },
             'test_data': 'test',
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 201 }, 
               { 'code': code, 'content': content, 'headers': headers } );
@@ -172,7 +172,7 @@ module.exports = {
             'headers': { 'x-quorum-lease-version': version },
             'connection': { 'remoteAddress': '127.0.0.2' },
             'test_data': 'test',
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 204 }, 
               { 'code': code, 'content': content, 'headers': headers } );
@@ -187,7 +187,7 @@ module.exports = {
             'method': 'GET', 'url': '/v1/namespace/lease/list',
             'headers': {},
             'connection': { 'remoteAddress': '127.0.0.2' },
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 200 }, 
               { 'code': code, 'content': content, 'headers': headers } );    
@@ -201,7 +201,7 @@ module.exports = {
             'method': 'GET', 'url': '/v1/health',
             'headers': {},
             'connection': { 'remoteAddress': '127.0.0.2' },
-          }), function( code, headers, content ) {
+          }), function( code, reason, headers, content ) {
             test_response_state( 
               { 'code': 200 }, 
               { 'code': code, 'content': content, 'headers': headers } );    
