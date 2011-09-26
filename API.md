@@ -41,7 +41,7 @@ The URI structure will be as follows:
 Since this would be the first version, all urls should start with '/v1'.  That could look something like this:
 <pre>http://*rest server*/v1/*something*/*else*</pre>
 
-## Nameppace
+## Namespace
 
 The next part of the url after the version number.  Allows us to distinguish between a lease container and the actual leases (or potentially other locking primitives in the future).
 
