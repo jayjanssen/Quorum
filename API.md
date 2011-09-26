@@ -39,10 +39,7 @@ The URI structure will be as follows:
 ## API version
 
 Since this would be the first version, all urls should start with '/v1'.  That could look something like this:
-<verbatim>
-http://<rest server>/v1/<something>/<else>
-</verbatim>
-
+ http://<rest server>/v1/<something>/<else>
 
 ## Nameppace
 
@@ -66,9 +63,8 @@ You may wish for your Auth method to encapsulate some manner of identification o
 
 ## REST URI scheme summary
 
-<verbatim>
-http://<rest server>/v<version #>/<your/namespace/separated/by/slashes>/leases/<a name for your lease>
-</verbatim>
+ http://<rest server>/v<version #>/<your/namespace/separated/by/slashes>/leases/<a name for your lease>
+
 
    * Rest server: the hostname of this service (should be a brooklyn rotation)
    * Version #: 1 for now, so '/v1/'
@@ -83,10 +79,12 @@ http://<rest server>/v<version #>/<your/namespace/separated/by/slashes>/leases/<
 Attempt get acquire a lease for the client instance.  Will only return a 2xx if the lease was acquired, 4xx otherwise.  The body of the request can be an arbitrary blob of application-specific data up to 4K(?).
 
 Required:
- * Authorization
- * Client Identifier (defaults to client IP)
+
+   * Authorization
+   * Client Identifier (defaults to client IP)
 
 Optional:
+
  * Client data (<= 4K)
 
 ## PUT
@@ -94,10 +92,12 @@ Optional:
 Attempt to renew a lease, can only succeed if lease is already owned by the calling client and the lease has not expired.  This method can also update the application-specific data if desired.  If no data is given, then the data associated with the lease will not be modified.
 
 Required:
+
  * Authorization
  * Client Identifier (defaults to client IP)
 
 Optional:
+
  * Client data (<= 4K)   
 
 ## DELETE
@@ -105,9 +105,11 @@ Optional:
 Give up the lease immediately so it is available for other clients.  Only possible if calling client owns the lease.  Any client data associated with the lease will be purged.
 
 Required:
+
  * Authorization
 
 Optional:
+
  * Client Identifier (defaults to client IP)
 
 ## HEAD
@@ -202,11 +204,13 @@ The following table attempts to document all possible response codes from the le
 The above codes may not follow the following rules (yet).
 
 There are probably some standards about using HTTP response codes somewhere, but here's my attempt at defining some:
+
  * Response codes should as closely match conventional usage as possible (i.e., code assignment shouldn't be arbitrary except when necessary)
  * Response codes shouldn't be overloaded.  A single response code should not mean different things for different methods.
  * Unique response codes should only be used if they are (potentially) useful to the client.
 
 The response code groups should be defined as follows (based on: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html):
+
  * 2xx - Client request was successfully received, understood, and accepted.
  * 3xx - This class of status code indicates that further action needs to be taken by the user agent in order to fulfill the request.
  * 4xx - Errors from the client request
