@@ -39,7 +39,7 @@ The URI structure will be as follows:
 ## API version
 
 Since this would be the first version, all urls should start with '/v1'.  That could look something like this:
- http://<rest server>/v1/<something>/<else>
+<pre>http://<rest server>/v1/<something>/<else></pre>
 
 ## Nameppace
 
@@ -63,8 +63,9 @@ You may wish for your Auth method to encapsulate some manner of identification o
 
 ## REST URI scheme summary
 
+<pre>
  http://<rest server>/v<version #>/<your/namespace/separated/by/slashes>/leases/<a name for your lease>
-
+</pre>
 
    * Rest server: the hostname of this service (should be a brooklyn rotation)
    * Version #: 1 for now, so '/v1/'
