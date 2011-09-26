@@ -39,7 +39,7 @@ The URI structure will be as follows:
 ## API version
 
 Since this would be the first version, all urls should start with '/v1'.  That could look something like this:
-<pre>http://<rest server>/v1/<something>/<else></pre>
+<pre>http://*rest server*/v1/*something*/*else*</pre>
 
 ## Nameppace
 
@@ -64,7 +64,7 @@ You may wish for your Auth method to encapsulate some manner of identification o
 ## REST URI scheme summary
 
 <pre>
- http://<rest server>/v<version #>/<your/namespace/separated/by/slashes>/leases/<a name for your lease>
+ http://*rest server*/v*version #*/*your/namespace/separated/by/slashes*/leases/*a name for your lease*
 </pre>
 
    * Rest server: the hostname of this service (should be a brooklyn rotation)
@@ -236,6 +236,6 @@ Need some info here about acceptable inputs
 
 A call to the 'lease/list' uri should return a list of all leases for that namespace in some form or another.
 
- http://<rest server>/v<version #>/<your/namespace>/lease/list
+<pre>http://*rest server*/v*version #*/*your/namespace*/lease/list</pre>
 
 Only a GET would be supported here.  Possibly an 'Accept' header could be used to request human-readable html, or json for example.  It's not clear to me if this should return the status of all of the found leases or not, but it's conceivable that it could.
